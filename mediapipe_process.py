@@ -54,6 +54,7 @@ twin1 = image_paths[0]
 twin2 = image_paths[1]
 
 twin1_image = mp.Image.create_from_file(twin1.as_posix())
+
 twin2_image = mp.Image.create_from_file(twin2.as_posix())
 
 detection1 = landmarker.detect(twin1_image)
@@ -91,3 +92,5 @@ twin2_coords = get_landmark_coords(detection2)
 
 plt.scatter(twin1_coords[0], twin1_coords[1], s=twin1_coords[2])
 plt.scatter(twin2_coords[0], twin2_coords[1], s=twin2_coords[2])
+
+# %%
