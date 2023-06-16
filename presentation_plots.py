@@ -31,7 +31,7 @@ options = face_landmarker_options(
 landmarker = vision.FaceLandmarker.create_from_options(options)
 
 # %%
-user_id = 1210
+user_id = 2221
 path_user_selfies = path_selfies / Path(f"{user_id}")
 user_selfies = sorted(path_user_selfies.glob("*.jpg"))
 
