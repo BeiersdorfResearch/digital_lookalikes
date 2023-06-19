@@ -30,7 +30,7 @@ options = face_landmarker_options(
 landmarker = vision.FaceLandmarker.create_from_options(options)
 
 # %%
-user_id = 2221
+user_id = 5336
 path_user_selfies = path_selfies / Path(f"{user_id}")
 user_selfies = sorted(path_user_selfies.glob("*.jpg"))
 
@@ -65,9 +65,9 @@ ax1.imshow(selfie_2.numpy_view())
 ax1.set_title("Raw Selfie")
 
 
-detection_result_1 = landmarker.detect(selfie_1)
-annotated_selfie_1 = draw_landmarks_on_image(selfie_1.numpy_view(), detection_result_1)
-ax2.imshow(annotated_selfie_1)
+detection_result_2 = landmarker.detect(selfie_2)
+annotated_selfie_2 = draw_landmarks_on_image(selfie_2.numpy_view(), detection_result_2)
+ax2.imshow(annotated_selfie_2)
 ax2.set_title("Selfie w/ detected landmarks")
 
 fig.suptitle(f"Selfie for {user_id = }")
