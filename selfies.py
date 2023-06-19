@@ -99,20 +99,12 @@ SELECT [user_id]
 
 # %%
 df_selfies = datalake.get_query(query).sort_values("user_id")
-
 # %%
-
 df_top_100_users = get_df_users_w_most_selfies(df_selfies, 100)
-
 # %%
-
 for row in df_top_100_users.to_dict("records"):
     get_selfie(row, save_directory="./data/selfies")
-
 # %%
-
-# %%
-
 paths = list(Path("./data/selfies/").rglob("*.jpg"))
 paths = [path.as_posix() for path in paths]
 
