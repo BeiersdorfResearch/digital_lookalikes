@@ -123,3 +123,7 @@ for path in tqdm(paths):
     except RuntimeError:
         corrupted_images.append(path)
 # %%
+pd.DataFrame(corrupted_images, columns=["path"]).to_csv(
+    "./corrupted_files.csv", index=False
+)
+# %%
