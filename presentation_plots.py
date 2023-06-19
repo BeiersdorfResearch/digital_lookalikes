@@ -36,45 +36,6 @@ user_selfies = sorted(path_user_selfies.glob("*.jpg"))
 
 # %%
 
-fig, ax = plt.subplots(ncols=2)
-
-ax1, ax2 = ax[0], ax[1]
-
-
-selfie_1 = mp.Image.create_from_file(user_selfies[0].as_posix())
-ax1.imshow(selfie_1.numpy_view())
-ax1.set_title("Raw Selfie")
-
-detection_result_1 = landmarker.detect(selfie_1)
-annotated_selfie_1 = draw_landmarks_on_image(selfie_1.numpy_view(), detection_result_1)
-ax2.imshow(annotated_selfie_1)
-ax2.set_title("Selfie w/ detected landmarks")
-
-fig.suptitle(f"Selfie for {user_id = }")
-fig.savefig(f"./presentation_plots/{user_id}_selfie1.jpg")
-
-# %%
-
-fig, ax = plt.subplots(ncols=2)
-
-ax1, ax2 = ax[0], ax[1]
-
-
-selfie_2 = mp.Image.create_from_file(user_selfies[100].as_posix())
-ax1.imshow(selfie_2.numpy_view())
-ax1.set_title("Raw Selfie")
-
-
-detection_result_2 = landmarker.detect(selfie_2)
-annotated_selfie_2 = draw_landmarks_on_image(selfie_2.numpy_view(), detection_result_2)
-ax2.imshow(annotated_selfie_2)
-ax2.set_title("Selfie w/ detected landmarks")
-
-fig.suptitle(f"Selfie for {user_id = }")
-fig.savefig(f"./presentation_plots/{user_id}_selfie2.jpg")
-
-# %%
-
 cosine_distance = dpf.verify(
     user_selfies[0].as_posix(),
     user_selfies[100].as_posix(),
