@@ -4,11 +4,13 @@ import functools
 from pathlib import Path
 
 import pandas as pd
+from tqdm import tqdm
 from azure.core.exceptions import ResourceNotFoundError
 from azure.identity import ManagedIdentityCredential
 from azure.storage.blob import BlobClient
 from dl_conn import get_dl_conn
 from dl_orm import DLorm
+import mediapipe as mp
 
 con = get_dl_conn()
 datalake = DLorm(con)
@@ -36,7 +38,7 @@ def init_blob(credential, user_id, date, filename, container_name: str = "selfie
 
 def download_blob(blob, save_path: Path | str):
     if save_path.exists():
-        pass
+        return
 
     with open(save_path, "wb") as f:
         try:
@@ -64,6 +66,11 @@ def get_selfie(dataframe_row, save_directory: Path | str = "./data/selfies"):
         download_blob(blob, save_path)
     except ResourceNotFoundError:
         print(f"Blob for {user_id}-{date} not found.")
+
+    try:
+        mp.Image.create_from_file(save_path.as_posix())
+    except RuntimeError:
+        save_path.unlink()
 
 
 def get_users_w_most_selfies(dataframe: pd.DataFrame, n_users: int):
@@ -102,4 +109,17 @@ df_top_100_users = get_df_users_w_most_selfies(df_selfies, 100)
 for row in df_top_100_users.to_dict("records"):
     get_selfie(row, save_directory="./data/selfies")
 
+# %%
+
+# %%
+
+paths = list(Path("./data/selfies/").rglob("*.jpg"))
+paths = [path.as_posix() for path in paths]
+
+corrupted_images = []
+for path in tqdm(paths):
+    try:
+        mp.Image.create_from_file(path)
+    except RuntimeError:
+        corrupted_images.append(path)
 # %%
