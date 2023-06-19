@@ -1,7 +1,6 @@
 # %%
 from pathlib import Path
 
-import cv2
 import matplotlib.pyplot as plt
 import mediapipe as mp
 import numpy as np
@@ -42,14 +41,13 @@ fig, ax = plt.subplots(ncols=2)
 ax1, ax2 = ax[0], ax[1]
 
 
-ax1.imshow(cv2.imread(user_selfies[0].as_posix()))
+selfie_1 = mp.Image.create_from_file(user_selfies[0].as_posix())
+ax1.imshow(selfie_1.numpy_view())
 ax1.set_title("Raw Selfie")
 
-selfie_1 = mp.Image.create_from_file(user_selfies[0].as_posix())
 detection_result_1 = landmarker.detect(selfie_1)
 annotated_selfie_1 = draw_landmarks_on_image(selfie_1.numpy_view(), detection_result_1)
-color_corrected_selfie_1 = cv2.cvtColor(annotated_selfie_1, cv2.COLOR_BGR2RGB)
-ax2.imshow(color_corrected_selfie_1)
+ax2.imshow(annotated_selfie_1)
 ax2.set_title("Selfie w/ detected landmarks")
 
 fig.suptitle(f"Selfie for {user_id = }")
@@ -62,14 +60,14 @@ fig, ax = plt.subplots(ncols=2)
 ax1, ax2 = ax[0], ax[1]
 
 
-ax1.imshow(cv2.imread(user_selfies[100].as_posix()))
+selfie_2 = mp.Image.create_from_file(user_selfies[100].as_posix())
+ax1.imshow(selfie_2.numpy_view())
 ax1.set_title("Raw Selfie")
 
-selfie_1 = mp.Image.create_from_file(user_selfies[100].as_posix())
+
 detection_result_1 = landmarker.detect(selfie_1)
 annotated_selfie_1 = draw_landmarks_on_image(selfie_1.numpy_view(), detection_result_1)
-color_corrected_selfie_1 = cv2.cvtColor(annotated_selfie_1, cv2.COLOR_BGR2RGB)
-ax2.imshow(color_corrected_selfie_1)
+ax2.imshow(annotated_selfie_1)
 ax2.set_title("Selfie w/ detected landmarks")
 
 fig.suptitle(f"Selfie for {user_id = }")
