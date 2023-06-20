@@ -1,0 +1,27 @@
+---
+age_group_5y: category
+allergy_group: category
+area_name: category
+bmi_cat: category
+bmi: float32
+city: category
+country_name: category
+date: datetime64[ns]
+full_allergy: category
+gender_desc: category
+height_cm: float32
+is_medication_used: category
+latitude: float32
+longitude: float32
+month: category
+pollen_label: category
+pollen_level_grass: Int8
+pollen_level_tree: Int8
+pollen_level_weed: Int8
+severity: Int8
+source: category
+user_id: Int32
+uv_index: float32
+uv_max: Int8
+weight_kg: float32
+year: category
