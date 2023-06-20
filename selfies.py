@@ -92,6 +92,8 @@ def get_df_users_w_most_selfies(dataframe: pd.DataFrame, n_users: int) -> pd.Dat
 
 query = """
 SELECT [user_id]
+      ,[ts_date]
+      ,[id]
       ,[full_path]
   FROM [pg].[selfie]
   WHERE error_code IS NULL
