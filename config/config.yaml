@@ -1,0 +1,10 @@
+user_selfies:
+    latest_date: 2023-07-17
+    earliest date: 2019-01-01
+    anonymization_date: True
+    nr_selfies: 50
+    participant_type: SKINLY
+    identifiers:
+        - user_id
+        - ts_date
+        - full_path
