@@ -12,7 +12,10 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from tqdm import tqdm
 
-from visutil import draw_landmarks_on_image, plot_face_blendshapes_bar_graph
+from src.visualization.visutil import (
+    draw_landmarks_on_image,
+    plot_face_blendshapes_bar_graph,
+)
 
 path_selfies = Path("./data/selfies")
 model_path = Path("./test_data/face_landmarker.task")

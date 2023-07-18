@@ -8,7 +8,10 @@ import numpy as np
 from mediapipe.framework.formats import landmark_pb2
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
-from visutil import draw_landmarks_on_image, plot_face_blendshapes_bar_graph
+from src.visualization.visutil import (
+    draw_landmarks_on_image,
+    plot_face_blendshapes_bar_graph,
+)
 
 model_path = Path(
     "/home/azureuser/localfiles/digital-twins/test_data/face_landmarker.task"

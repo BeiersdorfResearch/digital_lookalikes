@@ -5,6 +5,8 @@ import deepface.DeepFace as dpf
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from tqdm import tqdm
+import time
 
 
 def deepface_find_user(user_path):
@@ -14,9 +16,20 @@ def deepface_find_user(user_path):
             img_path=pic.as_posix(),
             db_path=user_path.as_posix(),
             enforce_detection=False,
+            detector_backend="mediapipe",
         )
     except AttributeError as e:
         raise AttributeError from e
+
+
+def deepface_verify_user(img2_path):
+    pic = sorted(target_user.glob("*.jpg"))[0]
+    return dpf.verify(
+        img1_path=pic.as_posix(),
+        img2_path=img2_path.as_posix(),
+        enforce_detection=False,
+        detector_backend="mediapipe",
+    )
 
 
 def deepface_find_db(user_dirs):
@@ -33,6 +46,7 @@ target_user = user_dirs[1]
 pics = sorted(target_user.glob("*.jpg"))
 pic = pics[0]
 
+# %%
 all_users_df = deepface_find_db(user_dirs=user_dirs)
 
 # %%
@@ -45,6 +59,7 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
             df = i.result()
         except AttributeError:
             continue
+
 
 # %%
 all_users_df[0].result()[0]
@@ -93,5 +108,19 @@ fig = px.box(
 )
 
 fig.update_xaxes(type="category")
+
+# %%
+deepface_find_user(target_user)
+
+# %%
+
+user_dirs = sorted(Path("./data/selfies/").glob("*"))
+
+target_user = user_dirs[1]
+
+pics = target_user.glob("*.jpg")
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+    results = list(tqdm(executor.map(deepface_verify_user, pics)))
 
 # %%
