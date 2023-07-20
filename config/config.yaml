@@ -1,10 +1,7 @@
-user_selfies:
-    latest_date: 2023-07-17
-    earliest date: 2019-01-01
-    anonymization_date: True
+dl_filters:
+    earliest_ts_date: 2019-01-01
+    latest_ts_date: 2023-07-17
+    anonymization_date: "NOT NULL"
+    error_code: "NULL"
     nr_selfies: 50
-    participant_type: SKINLY
-    identifiers:
-        - user_id
-        - ts_date
-        - full_path
+    participant_type: "SKINLY"
