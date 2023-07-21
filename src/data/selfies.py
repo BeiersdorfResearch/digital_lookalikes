@@ -88,7 +88,7 @@ def check_blob_exists(row):
 def filter_bad_blobs(df_selfies: pd.DataFrame) -> pd.Series:
     non_existent_blobs = []
     with tqdm(total=len(df_selfies), ncols=100) as pbar:
-        with ThreadPoolExecutor(max_workers=12) as executor:
+        with ThreadPoolExecutor(max_workers=40) as executor:
             futures = [
                 executor.submit(check_blob_exists, row)
                 for row in df_selfies.to_dict("records")
@@ -98,10 +98,11 @@ def filter_bad_blobs(df_selfies: pd.DataFrame) -> pd.Series:
                     non_existent_blobs.append(future.result())
                     pbar.update(1)
                 except Exception as e:
-                    pbar.update(1)
                     print(f"{future} raised an exception {e}")
-    return pd.Series(non_existent_blobs).dropna()
-    # return df_selfies.loc[~df_selfies["selfie_link_id"].isin(non_existent_blobs)]
+                    pbar.update(1)
+                    continue
+
+    return df_selfies.loc[~df_selfies["selfie_link_id"].isin(non_existent_blobs)]
 
 
 def sample_user_selfies(df_selfies: pd.DataFrame) -> pd.DataFrame:
@@ -161,7 +162,7 @@ def get_selfie(dataframe_row: dict, save_dir: Path | str):
 def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str = "../../data/selfies"):
     l = len(df_selfies)
     with tqdm(total=l, ncols=100) as pbar:
-        with ThreadPoolExecutor(max_workers=12) as executor:
+        with ThreadPoolExecutor(max_workers=40) as executor:
             futures = [
                 executor.submit(get_selfie, row, save_dir=save_dir)
                 for row in df_selfies.to_dict("records")
@@ -173,6 +174,7 @@ def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str = "../../data/sel
                 except Exception as e:
                     print(f"{future} raised an exception {e}")
                     pbar.update(1)
+                    continue
 
 
 def validate_selfie(path: Path | str):
@@ -187,7 +189,7 @@ def validate_selfie(path: Path | str):
 def validate_selfies(paths: list[Path | str]):
     l = len(paths)
     with tqdm(total=l, ncols=100) as pbar:
-        with ThreadPoolExecutor(max_workers=12) as executor:
+        with ThreadPoolExecutor(max_workers=40) as executor:
             futures = [executor.submit(validate_selfie, path) for path in paths]
             for future in concurrent.futures.as_completed(futures):
                 try:
@@ -196,32 +198,39 @@ def validate_selfies(paths: list[Path | str]):
                 except Exception as e:
                     print(f"{future} raised an exception {e}")
                     pbar.update(1)
+                    continue
 
 
 # %%
-with hydra.initialize(version_base=None, config_path="../../config"):
-    cfg = hydra.compose(config_name="config")
-    print(cfg.dl_filters)
-df_selfies = get_user_selfie_data(cfg)
+# with hydra.initialize(version_base=None, config_path="../../config"):
+#     cfg = hydra.compose(config_name="config")
+#     print(cfg.dl_filters)
+# df_selfies = get_user_selfie_data(cfg)
+# df_selfies.to_csv("../../data/selfies.csv", index=False)
+df_selfies = pd.read_csv("../../data/selfies.csv")
+#%%
+df_filtered_latest = filter_bad_blobs(df_selfies.sort_values("ts_date").groupby("user_id").tail(2))
+#%%
+df_random_selfies = (
+    df_selfies.loc[
+        ~df_selfies["selfie_link_id"].isin(df_filtered_latest["selfie_link_id"])
+    ]
+    .groupby("user_id")
+    .sample(5)
+)
 # %%
-df_latest_selfie = df_selfies.sort_values("ts_date").groupby("user_id").tail(2)
+df_filtered_random = filter_bad_blobs(df_random_selfies)
 # %%
-bad_blobs_latest = filter_bad_blobs(df_latest_selfie)
+df_nr_random_selfies = df_filtered_random.groupby("user_id").nunique()["selfie_link_id"].reset_index()
+df_nr_random_selfies.loc[df_nr_random_selfies["selfie_link_id"] < 2].info()
 # %%
-bad_blobs = filter_bad_blobs(df_selfies)
-# %%
-
-# %%
-df_sampled_selfies = sample_user_selfies(df_selfies)
-get_selfies(df_sampled_selfies)
-validate_selfies(list(Path("../../data/selfies").glob("**/*.jpg")))
+df_nr_latest_selfies = df_filtered_latest.groupby("user_id").nunique()["selfie_link_id"].reset_index()
+df_nr_latest_selfies.loc[df_nr_latest_selfies["selfie_link_id"] < 1]
 # %%
 # @hydra.main(config_path="../../config", config_name="config", version_base=None)
 # def main(cfg: DictConfig):
 #     df_selfies = get_user_selfie_data(cfg)
-#     df_sampled_selfies = sample_user_selfies(df_selfies)
-#     get_selfies(df_sampled_selfies)
-#     validate_selfies(list(Path("../../data/selfies").glob("**/*.jpg")))
+#     df_filtered_blobs = filter_bad_blobs(df_selfies)
 
 
 # if __name__ == "__main__":

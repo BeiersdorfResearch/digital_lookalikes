@@ -23,7 +23,7 @@ Downloading the selfies is now done with the `ThreadPoolExecutor`, showing a mar
 
 To make sure that our selfies are those that are also accompanied by measurements we check that the `selfie_link_id` in the `pg.selfies` table is also present in the `pg.measure_procedure.selfie_link_id` column.
 
-### Current issue
+### Determining `nr_selfies` per user
 
 While trying to randomly sample the selfies I came across an issue. Since I need at least `3` selfies for each user I had filtered the users so that their `nr_selfies` from the `pg.users` table was at least `50` (`pg.users.nr_selfies >= 50`). However, when doing the sampling I got an error that made me aware that some of the users I was looking through had less than `3` selfies, sometimes even only `1`. I checked the `nr_selfies` from `pg.users` against the number of unique entries in the other parameters and a clear discrepancy can be seen.
 
@@ -86,7 +86,33 @@ whole list is `31148` rows long. The confusing part about this is that when I ch
 
 #### Current workaround
 
-For now I will simply use the `selfie_link_id` unique values as the filter for the number of selfies as it is the most conservative estimate and would avoid the most difficulties in case of change.
+For now I will simply use the `selfie_link_id` unique values as the filter for the number of selfies as it is the most conservative estimate and would avoid the most difficulties in case of change. As of now this number is set to at least `10` selfies.
+
+### Azure Blob Filtering (Current Issue)
+
+Another issue I'm currently facing is that there are quite a few blobs that throw errors when I attempt to access them which reduces the number of viable selfies per user I can obtain. 
+
+Currently we would like to have `3` selfies per user:
+- A latest one (date set in the config file).
+- 2 random ones from no earlier than 2019-01-01.
+
+The optimal way to achieve downloading those selfies for the analysis is as follows:
+- Download user selfie data from DataLake (mainly `pg.selfies`), into a dataframe.
+- Filter for number of selfies as explained in the previous section (`n >= 10`).
+- Filter for the latest selfie and 2 random ones for each user, and put that info into a dataframe.
+- Access and download all the selfies left after the above steps from the azure blob storage. (Each selfie is a blob)
+
+When doing so some errors were raised by the program showing that some blobs could not be found. Meaning that if I filter to exactly the amount of selfies I need and try to download them I will most likely end up with less than `3` selfies per user for a number of users.
+
+I managed to find a way that would filter out all the broken blobs, but it takes too long to do so for all the selfies we can obtain from the DataLake.Therefore, to circumvent that, I decided to modify the steps above and:
+- Take the 2 latest selfies for each user.
+- Sample 5 other random selfies from them.
+
+Then filter out the broken blobs from those and download what is left.
+
+With that we get `127` users who from the 2 latest selfies only have 1 existing blob (non have zero), and 13 users who have `< 2` existing blobs out of the 5 sampled from at the beginning. This means that with the current procedure these 31 users will not be considered as they have too few selfies for the analysis (total of 3 is needed).
+
+PS: The exact numbers might change as I had not set a constant seed for the sampler, meaning that by the time I get to actually downloading I would have run it again another few times resulting in different blobs being sample. However, it still gives a good estimate of the order of magnitude of missing blobs we have.
 
 ### Randomizing
 
