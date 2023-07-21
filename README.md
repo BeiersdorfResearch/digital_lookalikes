@@ -3,7 +3,7 @@
 - [x] Set up a proper directory for data science project
 - [x] Configured `ThreadPoolExecutor` for selfie download:
   - For 10000 selfies the threaded run takes 100 seconds while the serial run takes 600s. A clear win for threading.
-- [ ] Perform selfie selection along following criteria:
+- [x] Perform selfie selection along following criteria:
   - Latest good quality selfie. (defined in config file)
   - Select two random selfies in specified date range (config file)
   - Additional filters are defined in the config file
