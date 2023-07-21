@@ -5,3 +5,6 @@ dl_filters:
     error_code: "NULL"
     nr_selfies: 10
     participant_type: "SKINLY"
+
+selfie_data:
+    download: True

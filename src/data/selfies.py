@@ -1,6 +1,7 @@
 # %%
 import concurrent.futures
 from concurrent.futures import ThreadPoolExecutor
+import logging
 from pathlib import Path
 
 import hydra
@@ -14,9 +15,6 @@ from dl_conn import get_dl_conn
 from dl_orm import DLorm
 from omegaconf import DictConfig
 from tqdm import tqdm
-
-con = get_dl_conn()
-datalake = DLorm(con)
 
 
 def get_user_selfie_data(cfg: DictConfig) -> pd.DataFrame:
@@ -36,7 +34,13 @@ def get_user_selfie_data(cfg: DictConfig) -> pd.DataFrame:
         AND u.participant_type = '{cfg.dl_filters.participant_type}'
         AND pgsfe.selfie_link_id in (SELECT DISTINCT selfie_link_id FROM pg.measure_procedure)
     """
-    df_selfies = datalake.get_query(query).sort_values("user_id")
+    con = get_dl_conn()
+    datalake = DLorm(con)
+    df_selfies = (
+        datalake.get_query(query)
+        .sort_values("user_id")
+        .drop_duplicates(subset=["user_id", "selfie_link_id"])
+    )
     filter_users = get_users_w_min_nrselfies(df_selfies, cfg.dl_filters.nr_selfies)
     df_selfies = df_selfies.loc[df_selfies["user_id"].isin(filter_users)]
     return df_selfies
@@ -66,6 +70,9 @@ def init_blob(
     container_name: str = "selfies",
 ):
     credential = ManagedIdentityCredential()
+
+    logging.getLogger("azure").setLevel(logging.ERROR)
+
     return BlobClient(
         account_url="https://claire1kstorage.blob.core.windows.net",
         container_name=container_name,
@@ -105,16 +112,30 @@ def filter_bad_blobs(df_selfies: pd.DataFrame) -> pd.Series:
     return df_selfies.loc[~df_selfies["selfie_link_id"].isin(non_existent_blobs)]
 
 
-def sample_user_selfies(df_selfies: pd.DataFrame) -> pd.DataFrame:
-    df_latest_selfie = df_selfies.sort_values("ts_date").groupby("user_id").tail(1)
-    df_random_selfies = (
+def clean_selfie_blobs(df_selfies: pd.DataFrame) -> pd.DataFrame:
+    df_filtered_latest = filter_bad_blobs(
+        df_selfies.sort_values("ts_date").groupby("user_id").tail(2)
+    ).drop_duplicates(subset=["user_id"])
+    df_filtered_random = filter_bad_blobs(
         df_selfies.loc[
-            ~df_selfies["selfie_link_id"].isin(df_latest_selfie["selfie_link_id"])
+            ~df_selfies["selfie_link_id"].isin(df_filtered_latest["selfie_link_id"])
         ]
+        .groupby("user_id")
+        .sample(5)
+    )
+    df_count_selfies = df_filtered_random.groupby("user_id").nunique().reset_index()
+    passing_users = df_count_selfies.loc[df_count_selfies["full_path"] >= 2][
+        "user_id"
+    ].values
+    df_sampled_random = (
+        df_filtered_random.loc[df_filtered_random["user_id"].isin(passing_users)]
         .groupby("user_id")
         .sample(2)
     )
-    return pd.concat([df_latest_selfie, df_random_selfies]).sort_values("user_id")
+    df_match_users = df_filtered_latest.loc[
+        df_filtered_latest["user_id"].isin(df_filtered_random["user_id"])
+    ]
+    return pd.concat([df_match_users, df_sampled_random])
 
 
 def download_blob(
@@ -129,12 +150,10 @@ def download_blob(
     if save_path.exists():
         return
 
-    with open(save_path, "wb") as f:
-        try:
-            data = blob.download_blob()
-            data.readinto(f)
-        except ResourceNotFoundError as e:
-            raise ResourceNotFoundError(f"Blob for {user_id}-{date} not found.") from e
+    try:
+        return blob.download_blob()
+    except ResourceNotFoundError as e:
+        raise ResourceNotFoundError(f"Blob for {user_id}-{date} not found.") from e
 
 
 def get_selfie(dataframe_row: dict, save_dir: Path | str):
@@ -149,11 +168,14 @@ def get_selfie(dataframe_row: dict, save_dir: Path | str):
     save_path = save_dir / Path(f"{date}{dataframe_row['selfie_link_id']}.jpg")
 
     try:
-        download_blob(
-            user_id=user_id,
-            date=date,
-            filename=filename,
-            save_path=save_path,
+        return (
+            download_blob(
+                user_id=user_id,
+                date=date,
+                filename=filename,
+                save_path=save_path,
+            ),
+            save_path,
         )
     except ResourceNotFoundError as e:
         raise ResourceNotFoundError(f"Blob for {user_id}-{date} not found.") from e
@@ -169,7 +191,9 @@ def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str = "../../data/sel
             ]
             for future in concurrent.futures.as_completed(futures):
                 try:
-                    future.result()
+                    data, save_path = future.result()
+                    with open(save_path, "wb") as f:
+                        data.readinto(f)
                     pbar.update(1)
                 except Exception as e:
                     print(f"{future} raised an exception {e}")
@@ -207,33 +231,34 @@ def validate_selfies(paths: list[Path | str]):
 #     print(cfg.dl_filters)
 # df_selfies = get_user_selfie_data(cfg)
 # df_selfies.to_csv("../../data/selfies.csv", index=False)
-df_selfies = pd.read_csv("../../data/selfies.csv")
-#%%
-df_filtered_latest = filter_bad_blobs(df_selfies.sort_values("ts_date").groupby("user_id").tail(2))
-#%%
-df_random_selfies = (
-    df_selfies.loc[
-        ~df_selfies["selfie_link_id"].isin(df_filtered_latest["selfie_link_id"])
-    ]
-    .groupby("user_id")
-    .sample(5)
-)
-# %%
-df_filtered_random = filter_bad_blobs(df_random_selfies)
-# %%
-df_nr_random_selfies = df_filtered_random.groupby("user_id").nunique()["selfie_link_id"].reset_index()
-df_nr_random_selfies.loc[df_nr_random_selfies["selfie_link_id"] < 2].info()
-# %%
-df_nr_latest_selfies = df_filtered_latest.groupby("user_id").nunique()["selfie_link_id"].reset_index()
-df_nr_latest_selfies.loc[df_nr_latest_selfies["selfie_link_id"] < 1]
-# %%
-# @hydra.main(config_path="../../config", config_name="config", version_base=None)
-# def main(cfg: DictConfig):
-#     df_selfies = get_user_selfie_data(cfg)
-#     df_filtered_blobs = filter_bad_blobs(df_selfies)
 
 
-# if __name__ == "__main__":
-#     main()
-
 # %%
+# df_selfies = pd.read_csv("../../data/selfies.csv")
+# %%
+def main_dl(cfg: DictConfig) -> None:
+    df_selfies = get_user_selfie_data(cfg)
+    df_selfies.to_csv("../../data/all_selfies.csv", index=False)
+    df_clean_selfie_blobs = clean_selfie_blobs(df_selfies)
+    df_clean_selfie_blobs.to_csv("../../data/downloaded_selfies.csv", index=False)
+    get_selfies(df_clean_selfie_blobs, save_dir="../../data/selfies")
+
+
+def main_csv() -> None:
+    # df_selfies = pd.read_csv("../../data/all_selfies.csv")
+    # df_clean_selfie_blobs = clean_selfie_blobs(df_selfies)
+    # df_clean_selfie_blobs.to_csv("../../data/downloaded_selfies.csv", index=False)
+    df_clean_selfie_blobs = pd.read_csv("../../data/downloaded_selfies.csv")
+    get_selfies(df_clean_selfie_blobs, save_dir="../../data/selfies")
+
+
+@hydra.main(config_path="../../config", config_name="config", version_base=None)
+def main(cfg: DictConfig) -> None:
+    if cfg.selfie_data.download:
+        main_dl(cfg)
+        return
+    main_csv()
+
+
+if __name__ == "__main__":
+    main()

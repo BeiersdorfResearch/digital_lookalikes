@@ -88,7 +88,7 @@ whole list is `31148` rows long. The confusing part about this is that when I ch
 
 For now I will simply use the `selfie_link_id` unique values as the filter for the number of selfies as it is the most conservative estimate and would avoid the most difficulties in case of change. As of now this number is set to at least `10` selfies.
 
-### Azure Blob Filtering (Current Issue)
+### Azure Blob Filtering 
 
 Another issue I'm currently facing is that there are quite a few blobs that throw errors when I attempt to access them which reduces the number of viable selfies per user I can obtain. 
 
@@ -104,11 +104,13 @@ The optimal way to achieve downloading those selfies for the analysis is as foll
 
 When doing so some errors were raised by the program showing that some blobs could not be found. Meaning that if I filter to exactly the amount of selfies I need and try to download them I will most likely end up with less than `3` selfies per user for a number of users.
 
+#### Current workaround 
+
 I managed to find a way that would filter out all the broken blobs, but it takes too long to do so for all the selfies we can obtain from the DataLake.Therefore, to circumvent that, I decided to modify the steps above and:
 - Take the 2 latest selfies for each user.
 - Sample 5 other random selfies from them.
 
-Then filter out the broken blobs from those and download what is left.
+Then filter out the broken blobs from those, make sure we only include `1 latest` selfie, and 2 `random selfies` from all users, and download what is left.
 
 With that we get `127` users who from the 2 latest selfies only have 1 existing blob (non have zero), and 13 users who have `< 2` existing blobs out of the 5 sampled from at the beginning. This means that with the current procedure these 31 users will not be considered as they have too few selfies for the analysis (total of 3 is needed).
 
@@ -116,4 +118,4 @@ PS: The exact numbers might change as I had not set a constant seed for the samp
 
 ### Randomizing
 
-Currently figuring out best way to randomize selection.
+The randomizing was done by calling `pandas.DataFrame.groupby("user_id").sample(n)` where needed.
