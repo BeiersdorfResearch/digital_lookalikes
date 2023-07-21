@@ -3,5 +3,5 @@ dl_filters:
     latest_ts_date: 2023-07-17
     anonymization_date: "NOT NULL"
     error_code: "NULL"
-    nr_selfies: 50
+    nr_selfies: 10
     participant_type: "SKINLY"
