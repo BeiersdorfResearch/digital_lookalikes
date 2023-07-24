@@ -16,6 +16,8 @@ from dl_orm import DLorm
 from omegaconf import DictConfig
 from tqdm import tqdm
 
+credential = ManagedIdentityCredential()
+
 
 def get_user_selfie_data(cfg: DictConfig) -> pd.DataFrame:
     query = f"""
@@ -69,8 +71,6 @@ def init_blob(
     filename: str,
     container_name: str = "selfies",
 ):
-    credential = ManagedIdentityCredential()
-
     logging.getLogger("azure").setLevel(logging.ERROR)
 
     return BlobClient(
@@ -165,7 +165,7 @@ def get_selfie(dataframe_row: dict, save_dir: Path | str):
     save_dir = Path(save_dir)
     save_dir = save_dir / Path(f"{user_id}")
     save_dir.mkdir(parents=True, exist_ok=True)
-    save_path = save_dir / Path(f"{date}{dataframe_row['selfie_link_id']}.jpg")
+    save_path = save_dir / Path(f"{date}_{dataframe_row['selfie_link_id']}.jpg")
 
     try:
         return (
@@ -201,40 +201,6 @@ def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str = "../../data/sel
                     continue
 
 
-def validate_selfie(path: Path | str):
-    path = Path(path)
-    try:
-        img = Image.open(path.as_posix())
-        img.verify()
-    except (IOError, SyntaxError) as e:
-        raise
-
-
-def validate_selfies(paths: list[Path | str]):
-    l = len(paths)
-    with tqdm(total=l, ncols=100) as pbar:
-        with ThreadPoolExecutor(max_workers=40) as executor:
-            futures = [executor.submit(validate_selfie, path) for path in paths]
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    future.result()
-                    pbar.update(1)
-                except Exception as e:
-                    print(f"{future} raised an exception {e}")
-                    pbar.update(1)
-                    continue
-
-
-# %%
-# with hydra.initialize(version_base=None, config_path="../../config"):
-#     cfg = hydra.compose(config_name="config")
-#     print(cfg.dl_filters)
-# df_selfies = get_user_selfie_data(cfg)
-# df_selfies.to_csv("../../data/selfies.csv", index=False)
-
-
-# %%
-# df_selfies = pd.read_csv("../../data/selfies.csv")
 # %%
 def main_dl(cfg: DictConfig) -> None:
     df_selfies = get_user_selfie_data(cfg)
