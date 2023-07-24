@@ -8,3 +8,4 @@ dl_filters:
 
 selfie_data:
     download: True
+    save_dir: "../data/selfies"
