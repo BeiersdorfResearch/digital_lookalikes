@@ -7,7 +7,11 @@
   - Latest good quality selfie. (defined in config file)
   - Select two random selfies in specified date range (config file)
   - Additional filters are defined in the config file
+- [x] Check if parallelizing facial recognition works and is worth it
+- [x] Figure out way to stream scores to file in case of crash
 - [ ] Perform model-metric combination permutations and save scores
+  - [ ] Step 1: All inter-user comparisons
+  - [ ] Step 2: Randomize user ids and run comparisons between each user and all users
 
 # Status Report
 
@@ -119,3 +123,13 @@ PS: The exact numbers might change as I had not set a constant seed for the samp
 ### Randomizing
 
 The randomizing was done by calling `pandas.DataFrame.groupby("user_id").sample(n)` where needed.
+
+## Process
+
+### Parallelizing
+
+Tested with 40 users and it takes `23 seconds` with `ProcessPoolExecutor(max_workers=6)` and `35 seconds` with a non-parallelized loop.
+
+### Multirun
+
+Using the `hydra.mode = MULTIRUN` to run model/metric comparison.
