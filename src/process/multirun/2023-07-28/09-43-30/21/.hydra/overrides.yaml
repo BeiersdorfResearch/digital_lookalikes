@@ -1,0 +1,2 @@
+- +model=Dlib
+- +metric=cosine

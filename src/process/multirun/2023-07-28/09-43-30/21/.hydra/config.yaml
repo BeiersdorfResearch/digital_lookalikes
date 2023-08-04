@@ -1,0 +1,12 @@
+dl_filters:
+  earliest_ts_date: '2019-01-01'
+  latest_ts_date: '2023-07-17'
+  anonymization_date: NOT NULL
+  error_code: 'NULL'
+  nr_selfies: 10
+  participant_type: SKINLY
+selfie_data:
+  download: true
+  save_dir: /home/azureuser/localfiles/digital-twins/data/selfies
+model: Dlib
+metric: cosine

@@ -1,0 +1,2 @@
+- +model=DeepFace
+- +metric=euclidean_l2
