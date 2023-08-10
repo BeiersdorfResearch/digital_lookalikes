@@ -1,0 +1,2 @@
+- +model=Facenet
+- +metric=euclidean_l2

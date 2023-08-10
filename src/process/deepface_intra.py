@@ -17,12 +17,11 @@ log = logging.getLogger(__name__)
 
 def intra_user_comps(target_user: int, selfies_dir: Path, metric: str, model: str):
     target_user_pics = list(Path(selfies_dir / str(target_user)).glob("*.jpg"))
-    target_user_pics_shuffled = sample(list(target_user_pics), len(target_user_pics))
     list_df = []
-    for pic in target_user_pics_shuffled[1:]:
+    for pic in target_user_pics[1:]:
         dpf_dict = dpf.verify(
-            img1_path=target_user_pics_shuffled[0].as_posix(),
-            img2_path=target_user_pics_shuffled[1].as_posix(),
+            img1_path=target_user_pics[0].as_posix(),
+            img2_path=pic.as_posix(),
             enforce_detection=False,
             detector_backend="mediapipe",
             distance_metric=metric,
@@ -34,7 +33,7 @@ def intra_user_comps(target_user: int, selfies_dir: Path, metric: str, model: st
                 {
                     **{
                         "user_id": target_user,
-                        "img1_path": target_user_pics_shuffled[0].as_posix(),
+                        "img1_path": target_user_pics[0].as_posix(),
                         "img2_path": pic.as_posix(),
                     },
                     **dpf_dict,

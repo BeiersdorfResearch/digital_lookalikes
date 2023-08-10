@@ -2,7 +2,6 @@
 import pandas as pd
 import plotly.express as px
 
-
 # %%
 df_scores = pd.read_csv("../results/scores.csv")
 # %%
@@ -22,6 +21,22 @@ df_grp["std"] = (
 df_grp
 
 # %%
-px.scatter(df_grp, x="model", y="distance", color="similarity_metric", error_y="std")
+px.bar(
+    df_grp,
+    x="model",
+    y="distance",
+    color="similarity_metric",
+    error_y="std",
+    barmode="group",
+)
+# %%
+px.box(
+    df_scores,
+    x="model",
+    y="distance",
+    color="similarity_metric",
+)
 
+# %%
+df_scores.groupby(["model", "similarity_metric"])["time"].sum() / 3600
 # %%
