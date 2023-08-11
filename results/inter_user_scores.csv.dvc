@@ -1,6 +1,5 @@
 outs:
 - md5: 92208e0a38abde31c47117c48ba646aa
   size: 351846753
-  isexec: true
   hash: md5
   path: inter_user_scores.csv

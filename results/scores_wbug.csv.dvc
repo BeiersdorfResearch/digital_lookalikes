@@ -1,6 +1,5 @@
 outs:
 - md5: 4d52b260ee9a34b830dec990b277a17a
   size: 148284311
-  isexec: true
   hash: md5
   path: scores_wbug.csv

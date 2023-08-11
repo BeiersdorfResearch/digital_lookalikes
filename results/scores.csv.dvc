@@ -1,6 +1,5 @@
 outs:
 - md5: 101bdee15f615d4f0f3bbdc0731318d8
   size: 147630870
-  isexec: true
   hash: md5
   path: scores.csv
