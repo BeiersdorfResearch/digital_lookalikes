@@ -14,6 +14,15 @@ df_grp["std"] = (
     .std()
     .reset_index()["distance"]
 )
+# %%
+df_per_user = (
+    df_scores.groupby(["user_id", "model", "similarity_metric"]).diff().dropna().abs()
+)
+df_per_user
+# %%
+df_per_user
+# %%
+px.box(df_per_user)
 
 # %%
 px.bar(
