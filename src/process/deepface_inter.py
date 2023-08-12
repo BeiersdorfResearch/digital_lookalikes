@@ -66,7 +66,7 @@ def main(cfg: DictConfig):
                 desc="Inner loop iterating over user selfies",
                 total=len(latest_selfie_paths[i + 1 :]),
             ) as pbar_inner:
-                with ProcessPoolExecutor(max_workers=8) as executor:
+                with ProcessPoolExecutor(max_workers=32) as executor:
                     futures = [
                         executor.submit(
                             inter_user_comps,
