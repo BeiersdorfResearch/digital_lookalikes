@@ -2,54 +2,38 @@
 from typing import List
 import pandas as pd
 import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 from pathlib import Path
 import numpy as np
 
+plt.style.use("seaborn-v0_8-whitegrid")
+
 # %%
-df_inter = pd.read_csv(
-    "../results/inter_user_scores.csv",
-    names=[
-        "user1_id",
-        "user2_id",
-        "img1_path",
-        "img2_path",
-        "verified",
-        "distance",
-        "threshold",
-        "model",
-        "detector_backend",
-        "similarity_metric",
-        "facial_areas",
-        "time",
-    ],
+df_inter = pd.read_csv("../results/inter_user_scores.csv", header=0)
+# %%
+df_inter = pd.read_parquet("../results/inter_user_scores.parquet")
+# %%
+df_inter = df_inter.astype(
+    {
+        "user1_id": "int32",
+        "user2_id": "int32",
+        "distance": "float32",
+        "threshold": "category",
+        "model": "category",
+        "detector_backend": "category",
+        "similarity_metric": "category",
+        "time": "float32",
+    }
 )
 
 # %%
-df_inter.info()
-# %%
-df_inter = df_inter.loc[df_inter["user1_id"] != 3468]
+fig, ax = plt.subplots(figsize=(10, 10))
 
+sns.histplot(data=df_inter, x="distance", binwidth=0.1, stat="percent", ax=ax, kde=True)
+ax.set_title("Distribution of distances between users")
+ax.vlines(x=0.29, ymin=0, ymax=17, color="red", label="Threshold")
+fig.show()
 
-# %%
-def get_users_latest_selfies(selfies_dir: Path | str):
-    selfies_dir = Path(selfies_dir)
-    latest_selfie_paths: List[Path] = [
-        sorted(user.glob("*.jpg"))[-1] for user in selfies_dir.glob("*")
-    ]
-    return latest_selfie_paths
-
-
-# %%
-selfies = get_users_latest_selfies("../data/selfies")
-
-# %%
-# %%
-df_inter
-
-# %%
-for user in selfies:
-    if int(user.parent.name) in df_inter["user1_id"].unique():
-        print(user.parent.name)
-        break
 
 # %%
