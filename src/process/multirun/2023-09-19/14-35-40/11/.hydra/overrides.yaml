@@ -1,0 +1,2 @@
+- +model=OpenFace
+- +metric=euclidean_l2
