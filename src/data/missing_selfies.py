@@ -67,27 +67,10 @@ def get_user_specific_selfie_data(cfg: DictConfig, users_missing: pd.DataFrame) 
         .sort_values("user_id")
         .drop_duplicates(subset=["user_id", "selfie_link_id"])
     )
-    users_missing = users_missing #pd.read_csv(cfg.selfie_data.missing_user_dir)
+    users_missing = users_missing
     df_selfies = df_selfies.merge(users_missing, on = 'user_id', how = 'inner')
-    df_selfies['selfie_exists'] = (df_selfies['selfie_link_id'].equals(df_selfies['selfie_link_id_1'])) or df_selfies['selfie_link_id'].equals(df_selfies['selfie_link_id_2'])
+    df_selfies['selfie_exists'] = ((df_selfies['selfie_link_id'] == df_selfies['selfie_link_id_1']) | (df_selfies['selfie_link_id'] == df_selfies['selfie_link_id_2']))
     return df_selfies
-
-
-# def get_users_w_min_nrselfies(
-#     df_selfies: pd.DataFrame, min_nr_selfies: int
-# ) -> np.ndarray:
-#     df_nr_selfies = (
-#         df_selfies.groupby("user_id")
-#         .nunique()
-#         .reset_index()[["user_id", "selfie_link_id"]]
-#         .rename(columns={"selfie_link_id": "nr_selfies"})
-#     )
-
-#     return np.array(
-#         df_nr_selfies.loc[df_nr_selfies["nr_selfies"] >= min_nr_selfies][
-#             "user_id"
-#         ].values
-#     )
 
 
 def init_blob(
@@ -141,29 +124,29 @@ def clean_missing_selfie_blobs(df_selfies: pd.DataFrame) -> pd.DataFrame:
     df_filtered_latest = filter_bad_blobs(
         df_selfies.sort_values("ts_date").groupby("user_id").tail(2)
     ).drop_duplicates(subset=["user_id"])
-    df_filtered_latest = df_filtered_latest[~df_filtered_latest['selfie_exists']]
+    df_latest = df_filtered_latest[~df_filtered_latest['selfie_exists']]
     df_filtered_random = filter_bad_blobs(
         df_selfies.loc[
-            ~df_selfies["selfie_link_id"].isin(df_filtered_latest["selfie_link_id"])  
+            ~df_selfies["selfie_link_id"].isin(df_latest["selfie_link_id"])  
         ]
         .groupby("user_id")
         .sample(5)
     )
 
-    latest_selfie_users = df_filtered_latest.user_id.unique()
+    latest_selfie_users = df_latest.user_id.unique()
     df_filtered_random['missing_count'][df_filtered_random["user_id"].isin(latest_selfie_users)] -= 1
 
     df_one_sampled_random = (
-        df_filtered_random[df_filtered_random['missing_count']==1]
+        df_filtered_random[df_filtered_random['missing_count']==1 & ~df_filtered_random['selfie_exists']]
         .groupby('user_id')
         .sample(1)
     )
     df_two_sampled_random = (
-        df_filtered_random[df_filtered_random['missing_count']==2]
+        df_filtered_random[df_filtered_random['missing_count']==2 & ~df_filtered_random['selfie_exists']]
         .groupby('user_id')
         .sample(2)
     )
-    return pd.concat([df_filtered_latest, df_one_sampled_random, df_two_sampled_random])
+    return pd.concat([df_latest, df_one_sampled_random, df_two_sampled_random])
 
 
 def download_blob(
