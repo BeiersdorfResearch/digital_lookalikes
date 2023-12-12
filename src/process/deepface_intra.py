@@ -10,6 +10,7 @@ import more_itertools as mit
 import deepface.DeepFace as dpf
 import pandas as pd
 import numpy as np
+import os
 from tqdm import tqdm
 
 log = logging.getLogger(__name__)
@@ -45,11 +46,9 @@ def intra_user_comps(target_user: int, selfies_dir: Path, metric: str, model: st
 
 @hydra.main(config_path="../../config", config_name="config", version_base=None)
 def main(cfg: DictConfig):
-    list_of_users = pd.read_csv(
-        Path(cfg.selfie_data.save_dir).parent / "downloaded_selfies.csv"
-    )["user_id"].unique()
-    # chunks_of_users = np.array_split(list_of_users, 5)
-    # chunk_to_process = chunks_of_users[cfg.user_chunk]
+    # list_of_users = [user for user in os.listdir(cfg.selfie_data.save_dir)]
+    list_of_users = pd.read_csv('../../analytics/check-selfie-quality/user_completed.csv').user_id.unique()
+    
     with tqdm(desc="Performing Facial Recognition", total=len(list_of_users)) as pbar:
         with ProcessPoolExecutor(max_workers=8, max_tasks_per_child=3500) as executor:
             futures = [

@@ -8,11 +8,14 @@ dl_filters:
 
 selfie_data:
     download: True
-    save_dir: "/home/azureuser/localfiles/digital-twins/data/selfies"
+    save_dir: "/home/azureuser/cloudfiles/code/Users/Franziska.Ahrens/git/digital-twins/src/data/selfies"
+
+landmarks:
+    model_path : "/home/azureuser/cloudfiles/code/Users/Franziska.Ahrens/git/face_landmarker.task"
 
 hydra:
     mode: MULTIRUN
     sweeper:
         params:
-            +model: VGG-Face, Facenet, Facenet512, OpenFace, DeepFace, DeepID, ArcFace 
-            +metric: cosine, euclidean, euclidean_l2
+            +model: VGG-Face, Facenet, Facenet512, OpenFace, DeepFace, ArcFace #VGG-Face, Facenet, Facenet512, OpenFace, DeepFace, DeepID, ArcFace 
+            +metric: cosine, euclidean_12 #cosine, euclidean, euclidean_l2
