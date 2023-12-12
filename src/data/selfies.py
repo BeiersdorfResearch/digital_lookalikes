@@ -206,16 +206,13 @@ def main_dl(cfg: DictConfig) -> None:
     df_selfies = get_user_selfie_data(cfg)
     df_selfies.to_csv("../../data/all_selfies.csv", index=False)
     df_clean_selfie_blobs = clean_selfie_blobs(df_selfies)
-    df_clean_selfie_blobs.to_csv("../../data/downloaded_selfies.csv", index=False)
-    get_selfies(df_clean_selfie_blobs, save_dir="../../data/selfies")
+    df_clean_selfie_blobs.to_csv("./downloaded_selfies.csv", index=False)
+    get_selfies(df_clean_selfie_blobs, save_dir="./selfies")
 
 
 def main_csv() -> None:
-    # df_selfies = pd.read_csv("../../data/all_selfies.csv")
-    # df_clean_selfie_blobs = clean_selfie_blobs(df_selfies)
-    # df_clean_selfie_blobs.to_csv("../../data/downloaded_selfies.csv", index=False)
-    df_clean_selfie_blobs = pd.read_csv("../../data/downloaded_selfies.csv")
-    get_selfies(df_clean_selfie_blobs, save_dir="../../data/selfies")
+    df_clean_selfie_blobs = pd.read_csv("./downloaded_selfies.csv")
+    get_selfies(df_clean_selfie_blobs, save_dir="./selfies")
 
 
 @hydra.main(config_path="../../config", config_name="config", version_base=None)

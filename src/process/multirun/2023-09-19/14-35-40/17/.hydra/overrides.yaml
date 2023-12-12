@@ -1,0 +1,2 @@
+- +model=DeepID
+- +metric=euclidean_l2

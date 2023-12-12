@@ -1,0 +1,2 @@
+- +model=VGG-Face
+- +metric=euclidean_l2
