@@ -52,7 +52,7 @@ def inter_user_comps(pic1: Path, pic2: Path, metric: str, model: str):
 def main(cfg: DictConfig):
     # chunks_of_users = np.array_split(list_of_users, 5)
     # chunk_to_process = chunks_of_users[cfg.user_chunk]
-    latest_selfie_paths = get_users_latest_selfies("../../data/selfies")
+    latest_selfie_paths = get_users_latest_selfies(cfg.selfie_data.save_dir)
     df_done = pd.read_csv("../../results/inter_user_scores.csv")
     finished_users = df_done["user1_id"].unique()
     with tqdm(

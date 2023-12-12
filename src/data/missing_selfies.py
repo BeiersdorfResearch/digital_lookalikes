@@ -132,7 +132,6 @@ def clean_missing_selfie_blobs(df_selfies: pd.DataFrame) -> pd.DataFrame:
         .groupby("user_id")
         .sample(5)
     )
-
     latest_selfie_users = df_latest.user_id.unique()
     df_filtered_random['missing_count'][df_filtered_random["user_id"].isin(latest_selfie_users)] -= 1
 
@@ -192,7 +191,7 @@ def get_selfie(dataframe_row: dict, save_dir: Path | str):
         raise ResourceNotFoundError(f"Blob for {user_id}-{date} not found.") from e
 
 
-def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str = "./selfies"):
+def get_selfies(df_selfies: pd.DataFrame, save_dir: Path | str):
     l = len(df_selfies)
     with tqdm(total=l, ncols=100) as pbar:
         with ThreadPoolExecutor(max_workers=40) as executor:
@@ -220,12 +219,12 @@ def main_dl(cfg: DictConfig) -> None:
     df_selfies.to_csv("./all_missing_selfies.csv", index=False)
     df_clean_selfie_blobs = clean_missing_selfie_blobs(df_selfies)
     df_clean_selfie_blobs.to_csv("./downloaded_missing_selfies.csv", index=False)
-    get_selfies(df_clean_selfie_blobs, save_dir="./selfies")
+    get_selfies(df_clean_selfie_blobs, save_dir= cfg.selfie_data.save_dir)
 
 
-def main_csv() -> None:
+def main_csv(cfg: DictConfig) -> None:
     df_clean_selfie_blobs = pd.read_csv("./downloaded_missing_selfies.csv")
-    get_selfies(df_clean_selfie_blobs, save_dir="./selfies")
+    get_selfies(df_clean_selfie_blobs, save_dir= cfg.selfie_data.save_dir)
 
 
 @hydra.main(config_path="../../config", config_name="config", version_base=None)
